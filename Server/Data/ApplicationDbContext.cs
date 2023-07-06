@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Server.Models;
 
 namespace Server.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<DbContext> options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
             
         }
@@ -13,5 +14,7 @@ namespace Server.Data
         {
 
         }
+
+        public DbSet<User> Users { get; set; }
     }
 }
