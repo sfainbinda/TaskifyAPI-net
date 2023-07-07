@@ -33,12 +33,12 @@ namespace Server.Models
             var attachEntity = _context.Attach(entity);
 
             attachEntity.State = EntityState.Modified;
-            attachEntity.Property(x => x.State).IsModified = false;
             attachEntity.Property(x => x.Created).IsModified = false;
             attachEntity.Property(x => x.CreatedUserId).IsModified = false;
             attachEntity.Property(x => x.Updated).IsModified = false;
             attachEntity.Property(x => x.UpdatedUserId).IsModified = false;
 
+            entity.State = EnState.Deleted;
             entity.Deleted = DateTime.Now;
             entity.DeletedUserId = _currentId;
 

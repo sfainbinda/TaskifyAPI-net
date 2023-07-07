@@ -14,47 +14,42 @@ namespace Server.Services
             _repository = new UserRepository(context);
         }
 
+        public async Task<bool> Delete(UserDto entity)
+        {
+            var user = new User(entity);
+            await _repository.Delete(user);
+            return true;
+        }
+
         public async Task<List<UserDto>> GetAll()
         {
-            try
-            {
-                return await _repository.GetAll();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return await _repository.GetAll();
         }
 
         public async Task<UserDto> GetById(int id)
         {
-            try
-            {
-                return await _repository.GetById(id);
-            }
-            catch(Exception)
-            {
-                throw;
-            }
+            return await _repository.GetById(id);
         }
 
-        public async Task<bool> Save(User entity)
+        public async Task<bool> Save(UserDto entity)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
+            var user = new User(entity);
             try
             {
                 if (entity.Id == 0)
-                    await _repository.Create(entity);
+                    await _repository.Create(user);
                 else
-                    await _repository.Update(entity);
+                    await _repository.Update(user);
 
                 await transaction.CommitAsync();
+                entity.Id = user.Id;
                 return true;
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                throw new Exception("Error al guardar usuario.", ex);
+                throw new Exception("Error al guardar/actualizar usuario.", ex);
             }
         }
     }

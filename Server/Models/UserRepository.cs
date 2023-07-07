@@ -26,6 +26,8 @@ namespace Server.Models
         public async Task<bool> Delete(User entity)
         {
             await base.Delete(entity);
+            var entry = _context.Entry(entity);
+            entry.Property(x => x.Password).IsModified = false;
             await _context.SaveChangesAsync();
 
             return true;
@@ -44,7 +46,8 @@ namespace Server.Models
         public async Task<UserDto> GetById(int id)
         {
             var userDto = await _context.Users
-                .Where(x => x.Id == id && x.State != EnState.Deleted)
+                .AsNoTracking()
+                .Where(x => x.Id == id)
                 .Select(x => new UserDto(x))
                 .FirstOrDefaultAsync();
 

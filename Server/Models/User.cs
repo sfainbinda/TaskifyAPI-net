@@ -32,5 +32,27 @@ namespace Server.Models
         [Required]
         [MaxLength(50)]
         public string? LastName { get; set; }
+
+        public User()
+        {
+            
+        }
+
+        public User(UserDto entity)
+        {
+            Id = entity.Id;
+            Email = entity.Email;
+            FirstName = entity.FirstName;
+            LastName = entity.LastName;
+
+            if (!String.IsNullOrEmpty(entity.Password))
+            {
+                Password = entity.Password;
+                RepeatPassword = entity.RepeatPassword;
+                NewPassword = entity.NewPassword;
+            }
+            else
+                Password = "";
+        }
     }
 }
