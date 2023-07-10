@@ -14,10 +14,9 @@ namespace Server.Services
             _repository = new UserRepository(context);
         }
 
-        public async Task<bool> Delete(UserDto entity)
+        public async Task<bool> Delete(User entity)
         {
-            var user = new User(entity);
-            await _repository.Delete(user);
+            await _repository.Delete(entity);
             return true;
         }
 
@@ -26,7 +25,12 @@ namespace Server.Services
             return await _repository.GetAll();
         }
 
-        public async Task<UserDto> GetById(int id)
+        public async Task<User> GetByEmail(string email)
+        {
+            return await _repository.GetByEmail(email);
+        }
+
+        public async Task<User> GetById(int id)
         {
             return await _repository.GetById(id);
         }

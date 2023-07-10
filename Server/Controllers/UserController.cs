@@ -1,7 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Server.Configuration;
 using Server.Data;
 using Server.Models;
 using Server.Services;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Server.Controllers
 {
@@ -11,13 +18,16 @@ namespace Server.Controllers
     {
         private readonly UserService _service;
         private readonly ApplicationDbContext _context;
+        private readonly AuthenticationService _authenticationService;
+
         public ILogger Logger { get; }
 
-        public UsersController(ApplicationDbContext context, ILogger<UsersController> logger)
+        public UsersController(ApplicationDbContext context, ILogger<UsersController> logger, IOptionsSnapshot<AppSettings> appSettings)
         {
             _context = context;
             _service = new UserService(context);
             Logger = logger;
+            _authenticationService = new AuthenticationService(appSettings);
         }
 
         [HttpDelete("{id}")]
@@ -64,11 +74,11 @@ namespace Server.Controllers
         {
             try
             {
-                var userDto = await _service.GetById(id);
-                if(userDto == null)
+                var user = await _service.GetById(id);
+                if(user == null)
                     return NotFound();
             
-                return Ok(userDto);
+                return Ok(new UserDto(user));
             }
             catch (Exception ex)
             {
@@ -76,6 +86,32 @@ namespace Server.Controllers
                 throw;
             }
         }
+
+        [HttpPost("SignIn", Name = "SignIn")]
+        public async Task<ActionResult<UserDto>> SignIn(UserSignIn userSignIn)
+        {
+            try
+            {
+                var user = await _service.GetByEmail(userSignIn.Email);
+
+                if (user == null)
+                    return NotFound();
+
+                if (user.Password == userSignIn.Password)
+                {
+                    var token = _authenticationService.GenerateToken(user);
+                    return Ok(token);
+                }
+                else
+                    return BadRequest();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error al iniciar sesión. Credenciales inválidas.");
+                throw;
+            }
+        }
+
 
         [HttpPost]
         [ProducesResponseType(201)]

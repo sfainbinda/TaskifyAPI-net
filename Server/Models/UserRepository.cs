@@ -43,18 +43,30 @@ namespace Server.Models
             return usersDto;
         }
 
-        public async Task<UserDto> GetById(int id)
+        public async Task<User> GetByEmail(string email)
         {
-            var userDto = await _context.Users
+            var user = await _context.Users
                 .AsNoTracking()
-                .Where(x => x.Id == id)
-                .Select(x => new UserDto(x))
+                .Where(x => x.Email == email)
                 .FirstOrDefaultAsync();
 
-            if (userDto == null)
+            if (user == null)
                 throw new Exception("Usuario no encontrado");
 
-            return userDto;
+            return user;
+        }
+
+        public async Task<User> GetById(int id)
+        {
+            var user = await _context.Users
+                .AsNoTracking()
+                .Where(x => x.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                throw new Exception("Usuario no encontrado");
+
+            return user;
         }
 
         public async Task<bool> Update(User entity)
