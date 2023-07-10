@@ -19,6 +19,7 @@ namespace Server.Controllers
         private readonly UserService _service;
         private readonly ApplicationDbContext _context;
         private readonly AuthenticationService _authenticationService;
+        private readonly AppSettings _appSettings;
 
         public ILogger Logger { get; }
 
@@ -96,10 +97,22 @@ namespace Server.Controllers
 
                 if (user == null)
                     return NotFound();
-
+                
                 if (user.Password == userSignIn.Password)
                 {
                     var token = _authenticationService.GenerateToken(user);
+
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTime.Now.AddDays(7), // Establece la fecha de expiración de la cookie
+                        Secure = true, // Indica si la cookie solo debe enviarse sobre una conexión segura HTTPS
+                        HttpOnly = true, // Indica si la cookie solo debe ser accesible a través del protocolo HTTP
+                        SameSite = SameSiteMode.Strict
+                    };
+
+                    Response.Cookies.Append(_appSettings.TokenAuthentication.CookieToken ?? string.Empty, token, cookieOptions);
+                    Response.Cookies.Append(_appSettings.TokenAuthentication.CookieUsername ?? string.Empty, user.Email ?? string.Empty, cookieOptions);
+
                     return Ok(token);
                 }
                 else

@@ -4,6 +4,7 @@ using Server.Configuration;
 using Server.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Net;
 
 namespace Server.Services
 {
@@ -49,7 +50,8 @@ namespace Server.Services
 
         public string GenerateToken(User user)
         {
-            return GenerateToken(user.Email, user.FirstName, user.LastName, user.Id.ToString());
+            return GenerateToken(user.Email ?? string.Empty, user.FirstName ?? string.Empty, user.LastName ?? string.Empty, user.Id.ToString());
+
         }
     }
 }

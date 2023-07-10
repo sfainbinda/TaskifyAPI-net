@@ -2,8 +2,8 @@
 {
     public class ConnectionStrings
     {
-        public string Default { get; set; }
+        public string? Default { get; set; }
 
-        public string Local { get; set; }
+        public string? Local { get; set; }
     }
 }

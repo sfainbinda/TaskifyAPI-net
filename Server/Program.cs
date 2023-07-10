@@ -4,6 +4,8 @@ using Server.Data;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Server.Configuration;
+using Microsoft.AspNetCore.Http;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,12 +32,21 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 //var connectionString = configuration.GetConnectionString("Default");
-var connectionString = appSettings.ConnectionStrings.Default;
-builder.Services.AddDbContext<ApplicationDbContext>(option =>
+if(appSettings != null)
 {
-    option.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
-});
-
+    if (appSettings.ConnectionStrings != null)
+    {
+        var connectionString = appSettings.ConnectionStrings.Default;
+        builder.Services.AddDbContext<ApplicationDbContext>(option =>
+        {
+            option.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+        });
+    }
+    else
+        throw new Exception("Error de conexión (cadena nula)");
+}
+else
+    throw new Exception("");
 
 // Agrega el servicio de autenticación JWT.
 builder.Services.AddAuthentication(options =>
@@ -59,6 +70,19 @@ builder.Services.AddAuthentication(options =>
         /* Especifica la clave de firma utilizada para verificar la autenticidad del token. 
          * Aquí se está utilizando una clave secreta almacenada en la configuración de la aplicación.*/
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appSettings.TokenAuthentication.Key))
+    };
+    // Opción extra para usar el token desde la cookie.
+    options.Events = new JwtBearerEvents
+    {
+        // https://medium.com/@alm.ozdmr/asp-net-core-jwt-and-refresh-token-with-httponly-cookies-b1b96c849742
+        OnMessageReceived = context =>
+        {
+            if (context.Request.Cookies.ContainsKey(appSettings.TokenAuthentication.CookieToken))
+            {
+                context.Token = context.Request.Cookies[appSettings.TokenAuthentication.CookieToken];
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
