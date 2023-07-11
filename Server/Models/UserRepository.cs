@@ -28,7 +28,8 @@ namespace Server.Models
 			await base.Delete(entity);
 			var entry = _context.Entry(entity);
 			entry.Property(x => x.Password).IsModified = false;
-			await _context.SaveChangesAsync();
+            entry.Property(x => x.Salt).IsModified = false;
+            await _context.SaveChangesAsync();
 
 			return true;
 		}
@@ -76,7 +77,8 @@ namespace Server.Models
 			{
 				var entry = _context.Entry(entity);
 				entry.Property(x => x.Password).IsModified = false;
-			}
+                entry.Property(x => x.Salt).IsModified = false;
+            }
 			await _context.SaveChangesAsync();
 
 			return true;

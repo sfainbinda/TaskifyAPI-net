@@ -25,7 +25,10 @@ namespace Server.Models
 		[DataType(DataType.Password)]
 		public string? NewPassword { get; set; }
 
-		[Required]
+        [MaxLength(50)]
+        public string Salt { get; set; }
+
+        [Required]
 		[MaxLength(50)]
 		public string? FirstName { get; set; }
 

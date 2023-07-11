@@ -1,5 +1,6 @@
 ﻿using Server.Data;
 using Server.Models;
+using System.Text.RegularExpressions;
 
 namespace Server.Services
 {
@@ -7,11 +8,13 @@ namespace Server.Services
 	{
 		private readonly UserRepository _repository;
 		private readonly ApplicationDbContext _context;
+		private readonly PasswordHasher _passwordHasher;
 
 		public UserService(ApplicationDbContext context)
 		{
 			_context = context;
 			_repository = new UserRepository(context);
+			_passwordHasher = new PasswordHasher();
 		}
 
 		public async Task<bool> Delete(User entity)
@@ -42,10 +45,36 @@ namespace Server.Services
 			try
 			{
 				if (entity.Id == 0)
-					await _repository.Create(user);
-				else
-					await _repository.Update(user);
+				{
+					var salt = _passwordHasher.GenerateSalt();
+					var hashedPassword = _passwordHasher.HashPassword(entity.Password!, salt);
+					
+					user.Password = hashedPassword;
+					user.Salt = Convert.ToBase64String(salt);
 
+					await _repository.Create(user);
+				}
+				else
+				{
+					if(!String.IsNullOrWhiteSpace(entity.Password))
+					{
+						user = await _repository.GetById(entity.Id);
+						var verifiedPassword = _passwordHasher.VerifyPassword(entity.Password, user.Password!, Convert.FromBase64String(user.Salt));
+						var passwordsMatch = entity.NewPassword == entity.RepeatPassword;
+
+						if (verifiedPassword && passwordsMatch)
+						{
+							var salt = _passwordHasher.GenerateSalt();
+							var hashedPassword = _passwordHasher.HashPassword(entity.NewPassword!, salt);
+
+							user.Password = hashedPassword;
+							user.Salt = Convert.ToBase64String(salt);
+						}
+						else
+							throw new Exception("Error, las contraseñas no coinciden.");
+					}
+					await _repository.Update(user);
+				}
 				await transaction.CommitAsync();
 				entity.Id = user.Id;
 				return true;
@@ -56,5 +85,5 @@ namespace Server.Services
 				throw new Exception("Error al guardar/actualizar usuario.", ex);
 			}
 		}
-	}
+    }
 }

@@ -9,6 +9,7 @@ using Server.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Server.Controllers
 {
@@ -20,6 +21,7 @@ namespace Server.Controllers
 		private readonly ApplicationDbContext _context;
 		private readonly AuthenticationService _authenticationService;
 		private readonly AppSettings? _appSettings;
+		private readonly PasswordHasher _passwordHasher;
 
 		public ILogger Logger { get; }
 
@@ -30,6 +32,7 @@ namespace Server.Controllers
 			Logger = logger;
 			_authenticationService = new AuthenticationService(appSettings);
 			_appSettings = appSettings.Value;
+			_passwordHasher = new PasswordHasher();
 		}
 
 		[HttpDelete("{id}")]
@@ -89,43 +92,6 @@ namespace Server.Controllers
 			}
 		}
 
-		[HttpPost("SignIn", Name = "SignIn")]
-		public async Task<ActionResult<UserDto>> SignIn(UserSignIn userSignIn)
-		{
-			try
-			{
-				var user = await _service.GetByEmail(userSignIn.Email);
-
-				if (user == null)
-					return NotFound();
-
-				if (user.Password == userSignIn.Password)
-				{
-					var token = _authenticationService.GenerateToken(user);
-
-					var cookieOptions = new CookieOptions
-					{
-						Expires = DateTime.Now.AddDays(7),
-						Secure = true,
-						HttpOnly = true,
-						SameSite = SameSiteMode.Strict
-					};
-
-					Response.Cookies.Append(_appSettings?.TokenAuthentication?.CookieToken!, token, cookieOptions);
-					Response.Cookies.Append(_appSettings?.TokenAuthentication?.CookieUsername!, user.Email!, cookieOptions);
-
-					return Ok(token);
-				}
-				else
-					return BadRequest();
-			}
-			catch (Exception ex)
-			{
-				Logger.LogError(ex, "Error al iniciar sesión. Credenciales inválidas.");
-				throw;
-			}
-		}
-
 		[HttpPost]
 		[ProducesResponseType(201)]
 		[ProducesResponseType(401)]
@@ -145,7 +111,10 @@ namespace Server.Controllers
 					entity.NewPassword = "";
 				}
 
-				return CreatedAtRoute("GetById", new { entity.Id }, entity);
+				var newUser = await _service.GetById(entity.Id);
+				var newUserDto = new UserDto(newUser);
+
+				return CreatedAtRoute("GetById", new { entity.Id }, newUserDto);
 			}
 			catch (Exception ex)
 			{
@@ -163,18 +132,14 @@ namespace Server.Controllers
 				return BadRequest(ModelState);
 
 			try
-			{
-				entity.Id = id;
+            {
+                entity.Id = id;
 				await _service.Save(entity);
 
-				if (!String.IsNullOrEmpty(entity.Password))
-				{
-					entity.Password = "";
-					entity.RepeatPassword = "";
-					entity.NewPassword = "";
-				}
+                var updatedUser = await _service.GetById(entity.Id);
+				var updatedUserDto = new UserDto(updatedUser);
 
-				return Ok(entity);
+                return Ok(updatedUserDto);
 			}
 			catch (Exception ex)
 			{
@@ -182,5 +147,59 @@ namespace Server.Controllers
 				throw;
 			}
 		}
-	}
+
+        [HttpPost("SignIn", Name = "SignIn")]
+        public async Task<ActionResult<UserDto>> SignIn(UserSignIn userSignIn)
+        {
+            try
+            {
+                var user = await _service.GetByEmail(userSignIn.Email);
+
+                if (user == null)
+                    return NotFound();
+
+                var verifiedPassword = _passwordHasher.VerifyPassword(userSignIn.Password, user.Password!, Convert.FromBase64String(user.Salt));
+
+                if (verifiedPassword)
+                {
+                    var token = _authenticationService.GenerateToken(user);
+
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTime.Now.AddDays(7),
+                        Secure = true,
+                        HttpOnly = true,
+                        SameSite = SameSiteMode.Strict
+                    };
+
+                    Response.Cookies.Append(_appSettings?.TokenAuthentication?.CookieToken!, token, cookieOptions);
+                    Response.Cookies.Append(_appSettings?.TokenAuthentication?.CookieUsername!, user.Email!, cookieOptions);
+
+                    return Ok(token);
+                }
+                else
+                    return BadRequest();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error al iniciar sesión. Credenciales inválidas.");
+                throw;
+            }
+        }
+
+        [HttpGet("LogOut", Name = "LogOut")]
+        public ActionResult LogOut()
+        {
+            try
+            {
+				Response.Cookies.Delete(_appSettings?.TokenAuthentication?.CookieToken!);
+                Response.Cookies.Delete(_appSettings?.TokenAuthentication?.CookieUsername!);
+				return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+    }
 }
