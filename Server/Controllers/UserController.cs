@@ -19,7 +19,7 @@ namespace Server.Controllers
         private readonly UserService _service;
         private readonly ApplicationDbContext _context;
         private readonly AuthenticationService _authenticationService;
-        private readonly AppSettings _appSettings;
+        private readonly AppSettings? _appSettings;
 
         public ILogger Logger { get; }
 
@@ -29,6 +29,7 @@ namespace Server.Controllers
             _service = new UserService(context);
             Logger = logger;
             _authenticationService = new AuthenticationService(appSettings);
+            _appSettings = appSettings.Value;
         }
 
         [HttpDelete("{id}")]
@@ -104,14 +105,14 @@ namespace Server.Controllers
 
                     var cookieOptions = new CookieOptions
                     {
-                        Expires = DateTime.Now.AddDays(7), // Establece la fecha de expiración de la cookie
-                        Secure = true, // Indica si la cookie solo debe enviarse sobre una conexión segura HTTPS
-                        HttpOnly = true, // Indica si la cookie solo debe ser accesible a través del protocolo HTTP
+                        Expires = DateTime.Now.AddDays(7),
+                        Secure = true,
+                        HttpOnly = true,
                         SameSite = SameSiteMode.Strict
                     };
 
-                    Response.Cookies.Append(_appSettings.TokenAuthentication.CookieToken ?? string.Empty, token, cookieOptions);
-                    Response.Cookies.Append(_appSettings.TokenAuthentication.CookieUsername ?? string.Empty, user.Email ?? string.Empty, cookieOptions);
+                    Response.Cookies.Append(_appSettings?.TokenAuthentication?.CookieToken!, token, cookieOptions);
+                    Response.Cookies.Append(_appSettings?.TokenAuthentication?.CookieUsername!, user.Email!, cookieOptions);
 
                     return Ok(token);
                 }
@@ -124,7 +125,6 @@ namespace Server.Controllers
                 throw;
             }
         }
-
 
         [HttpPost]
         [ProducesResponseType(201)]

@@ -5,17 +5,18 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Server.Configuration;
 using Microsoft.AspNetCore.Http;
+using static System.Net.WebRequestMethods;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Obtener la configuración
-var configuration = new ConfigurationBuilder() // La clase proporciona métodos para construir la configuración de la aplicación desde distintas fuentes.
-    .SetBasePath(builder.Environment.ContentRootPath) // Se establece la ruta base de la configuración en el directorio raíz del proyecto. 
-    /* appsettings.json como fuente de la configuración. 
-     * optional: El archivo es obligatorio y lanza una excepción si no lo encuentra. 
-     * reload on change: La configuración se recarga automáticamente si el archivo cambia durante la ejecución de la aplicación. */
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true) 
+/* appsettings.json como fuente de la configuración. 
+* optional: El archivo es obligatorio y lanza una excepción si no lo encuentra. 
+* reload on change: La configuración se recarga automáticamente si el archivo cambia durante la ejecución de la aplicación. */
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .Build();
 
 // Agregar la configuración de AppSettings
@@ -31,22 +32,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//var connectionString = configuration.GetConnectionString("Default");
-if(appSettings != null)
+var connectionString = appSettings?.ConnectionStrings!.Default;
+builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
-    if (appSettings.ConnectionStrings != null)
-    {
-        var connectionString = appSettings.ConnectionStrings.Default;
-        builder.Services.AddDbContext<ApplicationDbContext>(option =>
-        {
-            option.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
-        });
-    }
-    else
-        throw new Exception("Error de conexión (cadena nula)");
-}
-else
-    throw new Exception("");
+    option.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+});
 
 // Agrega el servicio de autenticación JWT.
 builder.Services.AddAuthentication(options =>
@@ -63,23 +53,20 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        // El emisor del token debe coincidir exactamente con este valor para que la validación sea exitosa.
-        ValidIssuer = appSettings.TokenAuthentication.Issuer,
-        // La audiencia del token debe coincidir exactamente con este valor para que la validación sea exitosa.
-        ValidAudience = appSettings.TokenAuthentication.Audience,
-        /* Especifica la clave de firma utilizada para verificar la autenticidad del token. 
-         * Aquí se está utilizando una clave secreta almacenada en la configuración de la aplicación.*/
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appSettings.TokenAuthentication.Key))
+        ValidIssuer = appSettings?.TokenAuthentication!.Issuer, // "Issuer" en el token debe coincidir con este valor.
+        ValidAudience = appSettings?.TokenAuthentication!.Audience, // "Audience" en el token debe coincidir con este valor.
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appSettings?.TokenAuthentication?.Key!)) // "Key" valida la autenticidad del token.
     };
+
     // Opción extra para usar el token desde la cookie.
     options.Events = new JwtBearerEvents
     {
-        // https://medium.com/@alm.ozdmr/asp-net-core-jwt-and-refresh-token-with-httponly-cookies-b1b96c849742
+        // Más información en: https://medium.com/@alm.ozdmr/asp-net-core-jwt-and-refresh-token-with-httponly-cookies-b1b96c849742
         OnMessageReceived = context =>
         {
-            if (context.Request.Cookies.ContainsKey(appSettings.TokenAuthentication.CookieToken))
+            if (context.Request.Cookies.ContainsKey(appSettings?.TokenAuthentication?.CookieToken!))
             {
-                context.Token = context.Request.Cookies[appSettings.TokenAuthentication.CookieToken];
+                context.Token = context.Request.Cookies[appSettings?.TokenAuthentication?.CookieToken!];
             }
             return Task.CompletedTask;
         }
