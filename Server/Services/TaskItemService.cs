@@ -20,6 +20,11 @@ namespace Server.Services
             return true;
         }
 
+        public async Task<List<TaskItemDto>> GetAll()
+        { 
+            return await _repository.GetAll();
+        }
+
         public async Task<TaskItem> GetById(int id)
         {
             return await _repository.GetById(id);

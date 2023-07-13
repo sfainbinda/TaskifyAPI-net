@@ -25,6 +25,9 @@ namespace Server.Models
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
             
+            if (String.IsNullOrWhiteSpace(entity.Title))
+                throw new InvalidOperationException("El título es obligatorio.");
+
             Id = entity.Id;
             State = entity.State;
 

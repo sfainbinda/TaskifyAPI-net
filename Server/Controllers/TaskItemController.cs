@@ -21,6 +21,44 @@ namespace Server.Controllers
             Logger = logger;
         }
 
+        [HttpDelete("{id}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        public async Task<ActionResult> Delete(int id)
+        {
+            try
+            {
+                var taskItem = await _service.GetById(id);
+                
+                if (taskItem == null)
+                    return NotFound();
+
+                await _service.Delete(taskItem);
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                Logger.LogError(ex, "Error al eliminar tarea.");
+                throw;
+            }
+        }
+
+        [HttpGet]
+        [ProducesResponseType(200)]
+        public async Task<ActionResult<TaskItemDto>> Get()
+        {
+            try
+            {
+                var taskItems = await _service.GetAll();
+                return Ok(taskItems);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error al obtener las tareas.");
+                throw;
+            }
+        }
+
         [HttpGet("{id}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -42,6 +80,8 @@ namespace Server.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(401)]
         public async Task<ActionResult<TaskItemDto>> Post([FromBody] TaskItemDto entity)
         {
             if (!ModelState.IsValid)
@@ -52,13 +92,38 @@ namespace Server.Controllers
                 var taskItem = new TaskItem(entity);
                 await _service.Save(taskItem);
 
-                var newtaskItem = await _service.GetById(entity.Id);
+                var newtaskItem = await _service.GetById(taskItem.Id);
 
-                return CreatedAtAction(nameof(Get), new { id = entity.Id }, new TaskItemDto(newtaskItem));
+                return CreatedAtAction(nameof(Get), new { id = taskItem.Id }, new TaskItemDto(newtaskItem));
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Error al crear tarea.");
+                throw;
+            }
+        }
+
+        [HttpPut("{id}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        public async Task<ActionResult> Put(int id, [FromBody] TaskItemDto entity)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                entity.Id = id;
+                var taskItem = new TaskItem(entity);
+                await _service.Save(taskItem);
+
+                var updatedTaskItem = await _service.GetById(entity.Id);
+
+                return Ok(new TaskItemDto(updatedTaskItem));
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error al actualizar tarea.");
                 throw;
             }
         }
