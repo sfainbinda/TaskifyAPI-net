@@ -161,6 +161,117 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "TaskItems",
+			"item": [
+				{
+					"name": "Create task",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"id\": 0,\r\n  \"title\": \"Septima tarea\",\r\n  \"description\": \"Cuarto POST de tarea de Taskify API. Fecha de inicio completa y fin vacia.\",\r\n  \"startDateTime\": \"2023-07-12T16:00:00.000Z\",\r\n  \"endDateTime\": \"2023-07-12T20:00:00.000Z\",\r\n  \"isAllDay\": false\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{taskify_host}}/taskitems",
+							"host": [
+								"{{taskify_host}}"
+							],
+							"path": [
+								"taskitems"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete task",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{taskify_host}}/taskitems/101",
+							"host": [
+								"{{taskify_host}}"
+							],
+							"path": [
+								"taskitems",
+								"101"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all tasks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{taskify_host}}/taskitems",
+							"host": [
+								"{{taskify_host}}"
+							],
+							"path": [
+								"taskitems"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get task by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{taskify_host}}/taskitems/106",
+							"host": [
+								"{{taskify_host}}"
+							],
+							"path": [
+								"taskitems",
+								"106"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update task",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 106,\r\n    \"state\": 1,\r\n    \"title\": \"Septima tarea\",\r\n    \"description\": \"Cuarto POST de tarea de Taskify API. Fecha de inicio completa y fin vacia.\",\r\n    \"startDateTime\": \"2023-07-12T16:00:00\",\r\n    \"endDateTime\": \"2023-07-12T20:00:00\",\r\n    \"isAllDay\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{taskify_host}}/taskitems/106",
+							"host": [
+								"{{taskify_host}}"
+							],
+							"path": [
+								"taskitems",
+								"106"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [

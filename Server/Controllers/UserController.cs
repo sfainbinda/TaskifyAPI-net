@@ -114,7 +114,7 @@ namespace Server.Controllers
 				var newUser = await _service.GetById(entity.Id);
 				var newUserDto = new UserDto(newUser);
 
-				return CreatedAtRoute("GetById", new { entity.Id }, newUserDto);
+				return CreatedAtRoute("GetById", new { id = entity.Id }, newUserDto);
 			}
 			catch (Exception ex)
 			{
