@@ -8,10 +8,10 @@ namespace Server.Services
         private readonly ApplicationDbContext _context;
         private readonly TaskItemRepository _repository;
 
-        public TaskItemService(ApplicationDbContext context)
+        public TaskItemService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
-            _repository = new TaskItemRepository(context);
+            _repository = new TaskItemRepository(context, httpContextAccessor);
         }
 
         public async Task<bool> Delete(TaskItem entity)

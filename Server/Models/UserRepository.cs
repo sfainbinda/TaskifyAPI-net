@@ -9,7 +9,7 @@ namespace Server.Models
 	{
 		private readonly ApplicationDbContext _context;
 
-		public UserRepository(ApplicationDbContext context) : base(context)
+		public UserRepository(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor) : base(context, httpContextAccessor)
 		{
 			_context = context;
 		}

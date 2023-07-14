@@ -2,21 +2,34 @@
 using Server.Interfaces;
 using Server.Models.Enums;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Server.Models
 {
     public abstract class BaseRepository : IRepository<BaseEntity>
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHttpContextAccessor _contextAccessor;
         
         /// <summary>
         /// Id of the currently logged-in user.
         /// </summary>
-        private int _currentId = 1;
+        protected int _currentId;
 
-        public BaseRepository(ApplicationDbContext context)
+        public int CurrentId => _currentId;
+
+        protected BaseRepository(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _contextAccessor = httpContextAccessor;
+
+            int id = 0;
+            if (httpContextAccessor.HttpContext!.User.HasClaim(x => x.Type == "Id")
+                && int.TryParse(httpContextAccessor.HttpContext.User.Claims.First(x => x.Type == "Id").Value, out id))
+            {
+                _currentId = id;
+            }
+            
         }
 
         public async Task<bool> Create(BaseEntity entity)

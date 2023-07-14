@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Server.Data;
 using Server.Models;
@@ -8,15 +10,16 @@ namespace Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class TaskItemsController : ControllerBase
     {
         private readonly TaskItemService _service;
         private readonly ApplicationDbContext _context;
         public ILogger Logger { get; set; }
 
-        public TaskItemsController(ApplicationDbContext context, ILogger<UsersController> logger)
+        public TaskItemsController(ApplicationDbContext context, ILogger<UsersController> logger, IHttpContextAccessor httpContextAccessor)
         {
-            _service = new TaskItemService(context);
+            _service = new TaskItemService(context, httpContextAccessor);
             _context = context;
             Logger = logger;
         }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -15,6 +16,7 @@ namespace Server.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
+	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 	public class UsersController : ControllerBase
 	{
 		private readonly UserService _service;
@@ -25,10 +27,10 @@ namespace Server.Controllers
 
 		public ILogger Logger { get; }
 
-		public UsersController(ApplicationDbContext context, ILogger<UsersController> logger, IOptionsSnapshot<AppSettings> appSettings)
+		public UsersController(ApplicationDbContext context, ILogger<UsersController> logger, IOptionsSnapshot<AppSettings> appSettings, IHttpContextAccessor httpContextAccessor)
 		{
 			_context = context;
-			_service = new UserService(context);
+			_service = new UserService(context, httpContextAccessor);
 			Logger = logger;
 			_authenticationService = new AuthenticationService(appSettings);
 			_appSettings = appSettings.Value;
@@ -149,6 +151,7 @@ namespace Server.Controllers
 		}
 
         [HttpPost("SignIn", Name = "SignIn")]
+		[AllowAnonymous]
         public async Task<ActionResult<UserDto>> SignIn(UserSignIn userSignIn)
         {
             try

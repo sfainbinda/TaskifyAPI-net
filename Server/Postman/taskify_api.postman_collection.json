@@ -232,13 +232,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{taskify_host}}/taskitems/106",
+							"raw": "{{taskify_host}}/taskitems/100",
 							"host": [
 								"{{taskify_host}}"
 							],
 							"path": [
 								"taskitems",
-								"106"
+								"100"
 							]
 						}
 					},
@@ -251,7 +251,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"id\": 106,\r\n    \"state\": 1,\r\n    \"title\": \"Septima tarea\",\r\n    \"description\": \"Cuarto POST de tarea de Taskify API. Fecha de inicio completa y fin vacia.\",\r\n    \"startDateTime\": \"2023-07-12T16:00:00\",\r\n    \"endDateTime\": \"2023-07-12T20:00:00\",\r\n    \"isAllDay\": true\r\n}",
+							"raw": "{\r\n    \"id\": 100,\r\n    \"state\": 1,\r\n    \"title\": \"Primer tarea\",\r\n    \"description\": \"Modificada por Goyo.\",\r\n    \"startDateTime\": \"2023-07-12T15:30:01\",\r\n    \"endDateTime\": \"2023-07-12T16:30:01\",\r\n    \"isAllDay\": false\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -259,13 +259,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{taskify_host}}/taskitems/106",
+							"raw": "{{taskify_host}}/taskitems/100",
 							"host": [
 								"{{taskify_host}}"
 							],
 							"path": [
 								"taskitems",
-								"106"
+								"100"
 							]
 						}
 					},

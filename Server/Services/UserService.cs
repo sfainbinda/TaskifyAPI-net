@@ -10,10 +10,10 @@ namespace Server.Services
 		private readonly ApplicationDbContext _context;
 		private readonly PasswordHasher _passwordHasher;
 
-		public UserService(ApplicationDbContext context)
+		public UserService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
 		{
 			_context = context;
-			_repository = new UserRepository(context);
+			_repository = new UserRepository(context, httpContextAccessor);
 			_passwordHasher = new PasswordHasher();
 		}
 
