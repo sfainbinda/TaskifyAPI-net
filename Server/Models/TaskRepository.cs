@@ -26,7 +26,7 @@ namespace Server.Models
         public async Task<List<TaskItemDto>> GetAll()
         {
             var taskItemsDto = await _context.TaskItems
-                .Where(x => x.State != EnState.Deleted)
+                .Where(x => x.State != EnState.Deleted && x.CreatedUserId == CurrentId)
                 .Select(x => new TaskItemDto(x))
                 .ToListAsync();
 
@@ -37,7 +37,7 @@ namespace Server.Models
         {
             var taskItem = await _context.TaskItems
                 .AsNoTracking()
-                .Where(x => x.Id == id)
+                .Where(x => x.Id == id && x.CreatedUserId == CurrentId)
                 .FirstOrDefaultAsync();
 
             if (taskItem == null)
@@ -62,6 +62,22 @@ namespace Server.Models
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<bool> IsTaskTimeConflict(TaskItem entity)
+        {
+            var existingTasks = await _context.TaskItems
+                .Where(x => x.State != EnState.Deleted && x.CreatedUserId == CurrentId)
+                .ToListAsync();
+
+            foreach (var taskItem in existingTasks)
+            {
+                if (entity.StartDateTime < taskItem.EndDateTime && entity.EndDateTime > taskItem.StartDateTime)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

@@ -35,6 +35,10 @@ namespace Server.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                var isTaskTimeConflict = await _repository.IsTaskTimeConflict(entity);
+                if (isTaskTimeConflict)
+                    throw new Exception("La tarea no puede ser creada debido a un conflicto de horario.");
+
                 if (entity.Id == 0)
                     await _repository.Create(entity);
                 else
